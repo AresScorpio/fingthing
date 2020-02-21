@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <meta name="viewport" content="width = device-width, initial-scale = 1.0, maximum-scale = 1.0, user-scalable=0">
+    <title>FingThing</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="#">FingThing - Dev</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item active">
+                    <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Settings</a>
+                </li>
+            </ul>
+            <form class="form-inline my-2 my-lg-0" method="GET" action="https://www.google.com/search">
+                <input class="form-control mr-sm-2" type="search" name="q" placeholder="Search" aria-label="Search">
+                <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+            </form>
+        </div>
+    </nav>
+    <div class="container">
+        <div class="row mt-3">
+            <div class="card mx-auto" style="width: 20rem;">
+                <div class="card-header">
+                    Light 1
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">Control Panel</h5>
+                    <p class="card-text">
+                        <FORM action="/" method="post">
+                            <div class="form-group">
+                                <div class="custom-control custom-radio">
+                                    <input type="radio" id="customRadio1" name="LED" value="1"
+                                        class="custom-control-input">
+                                    <label class="custom-control-label" for="customRadio1">On</label>
+                                </div>
+                                <div class="custom-control custom-radio">
+                                    <input type="radio" id="customRadio1" name="LED" value="0"
+                                        class="custom-control-input">
+                                    <label class="custom-control-label" for="customRadio1">Off</label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-group row">
+                                    <label for="example-number-input" class="col-2 col-form-label">Rotate</label>
+                                    <div class="col-10">
+                                        <input class="form-control" type="number" name="rotate" value="42"
+                                            id="example-number-input">
+                                    </div>
+                                </div>
+                            </div><button type="submit" class="btn btn-primary">Submit</button>
+                            <button type="reset" class="btn btn-primary">Reset</button>
+                        </FORM>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
