@@ -8,11 +8,32 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+    <script>
+        $(document).ready(function () {
+
+            (function worker() {
+                $.ajax({
+                    //window.origin 
+                    url: window.origin + '/data',
+                    success: function (data) {
+                        $('#dgc').text(data["dgc"]);
+                        $('#prh').text(data["prh"]);
+                        $('#hpa').text(data["hpa"]);
+                    },
+                    complete: function () {
+                        // Schedule the next request when the current one's complete
+                        setTimeout(worker, 10000);
+                    }
+                });
+            })();
+        });
+    </script>
 </head>
 
 <body>
+    
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="#">FingThing - Dev</a>
+        <a class="navbar-brand" style="font-family: 'Comic Sans MS', cursive, sans-serif" href="#">FingThing - Dev</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
             aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
@@ -24,7 +45,7 @@
                     <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#">Settings</a>
+                    <a class="nav-link" href="/reset">Reset</a>
                 </li>
             </ul>
             <form class="form-inline my-2 my-lg-0" method="GET" action="https://www.google.com/search">
@@ -37,7 +58,11 @@
         <div class="row mt-3">
             <div class="card mx-auto" style="width: 25rem;">
                 <div class="card-header">
-                    Light 1
+                    <div class="row">
+                        <div class="col-md-7">Switch 1</div>
+                        <div class="col-md-5 float-right"><i id="dgc"></i><i>C</i><i
+                                id="prh"></i><i>%</i><i id="hpa"></i><i>hPa</i></div>
+                    </div>
                 </div>
                 <div class="card-body">
                     <h5 class="card-title">Control Panel</h5>
@@ -66,7 +91,6 @@
                             </div><button type="submit" class="btn btn-primary">Submit</button>
                             <button type="reset" class="btn btn-primary">Reset</button>
                         </FORM>
-                    </p>
                 </div>
             </div>
         </div>

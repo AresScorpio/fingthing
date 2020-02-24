@@ -10,11 +10,13 @@ Servo servo;
 #include <Adafruit_Sensor.h>
 #include "Adafruit_BME280.h"
 Adafruit_BME280 bme;
+#define SEALEVELPRESSURE_HPA (1016.20)
 
 ESP8266WebServer server(80);
+int16_t current = 0;
 
 const char INDEX_HTML[] =
-"<!DOCTYPE HTML>\n"
+"<!DOCTYPE HTML>\n""<!DOCTYPE HTML>\n"
 "<html>\n"
 "\n"
 "<head>\n"
@@ -24,11 +26,32 @@ const char INDEX_HTML[] =
 "    <script src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js\"></script>\n"
 "    <script src=\"https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js\"></script>\n"
 "    <script src=\"https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js\"></script>\n"
+"    <script>\n"
+"        $(document).ready(function () {\n"
+"\n"
+"            (function worker() {\n"
+"                $.ajax({\n"
+"                    //window.origin \n"
+"                    url: window.origin + '/data',\n"
+"                    success: function (data) {\n"
+"                        $('#dgc').text(data[\"dgc\"]);\n"
+"                        $('#prh').text(data[\"prh\"]);\n"
+"                        $('#hpa').text(data[\"hpa\"]);\n"
+"                    },\n"
+"                    complete: function () {\n"
+"                        // Schedule the next request when the current one's complete\n"
+"                        setTimeout(worker, 10000);\n"
+"                    }\n"
+"                });\n"
+"            })();\n"
+"        });\n"
+"    </script>\n"
 "</head>\n"
 "\n"
 "<body>\n"
+"    \n"
 "    <nav class=\"navbar navbar-expand-lg navbar-light bg-light\">\n"
-"        <a class=\"navbar-brand\" href=\"#\">FingThing - Dev</a>\n"
+"        <a class=\"navbar-brand\" style=\"font-family: 'Comic Sans MS', cursive, sans-serif\" href=\"#\">FingThing - Dev</a>\n"
 "        <button class=\"navbar-toggler\" type=\"button\" data-toggle=\"collapse\" data-target=\"#navbarSupportedContent\"\n"
 "            aria-controls=\"navbarSupportedContent\" aria-expanded=\"false\" aria-label=\"Toggle navigation\">\n"
 "            <span class=\"navbar-toggler-icon\"></span>\n"
@@ -40,7 +63,7 @@ const char INDEX_HTML[] =
 "                    <a class=\"nav-link\" href=\"#\">Home <span class=\"sr-only\">(current)</span></a>\n"
 "                </li>\n"
 "                <li class=\"nav-item\">\n"
-"                    <a class=\"nav-link\" href=\"reset\">Reset</a>\n"
+"                    <a class=\"nav-link\" href=\"/reset\">Reset</a>\n"
 "                </li>\n"
 "            </ul>\n"
 "            <form class=\"form-inline my-2 my-lg-0\" method=\"GET\" action=\"https://www.google.com/search\">\n"
@@ -53,7 +76,11 @@ const char INDEX_HTML[] =
 "        <div class=\"row mt-3\">\n"
 "            <div class=\"card mx-auto\" style=\"width: 25rem;\">\n"
 "                <div class=\"card-header\">\n"
-"                    Light 1\n"
+"                    <div class=\"row\">\n"
+"                        <div class=\"col-md-7\">Finger 1</div>\n"
+"                        <div class=\"col-md-5 float-right\"><i id=\"dgc\"></i><i>C </i><i\n"
+"                                id=\"prh\"></i><i>% </i><i id=\"hpa\"></i><i>hPa</i></div>\n"
+"                    </div>\n"
 "                </div>\n"
 "                <div class=\"card-body\">\n"
 "                    <h5 class=\"card-title\">Control Panel</h5>\n"
@@ -82,13 +109,11 @@ const char INDEX_HTML[] =
 "                            </div><button type=\"submit\" class=\"btn btn-primary\">Submit</button>\n"
 "                            <button type=\"reset\" class=\"btn btn-primary\">Reset</button>\n"
 "                        </FORM>\n"
-"                    </p>\n"
 "                </div>\n"
 "            </div>\n"
 "        </div>\n"
 "    </div>\n"
 "</body>\n"
-"\n"
 "</html>";
 
 void returnFail(String msg)
@@ -98,14 +123,39 @@ void returnFail(String msg)
   server.send(500, "text/plain", msg + "\r\n");
 }
 
-void handleSubmit()
+void move(int from, int to) {
+  int slow = 20;
+  int step = 1;
+
+  if(from == to)
+    return;
+
+  if(from < to) {
+    for(int pos = from; pos < to; pos += step) {
+      servo.write(pos);
+      delay(slow);
+    }
+  } else {
+    for(int pos = from; pos > to; pos -= step) {
+      servo.write(pos);
+      delay(slow);
+    }
+  }
+}
+
+void handleTemp()
 {
-// The certificate is stored in PMEM
+  String res = "";
+  int dgc = bme.readTemperature();
+  int hpa = bme.readPressure() / 100;
+  int prh = bme.readHumidity();
+  res = "{\"dgc\": "+String(dgc)+", \"prh\": "+String(prh)+", \"hpa\": "+String(hpa)+"}";
+  server.sendHeader("Access-Control-Allow-Origin","*");
+  server.send(200, "text/json", res);
+}
+ 
 
-
-// And so is the key.  These could also be in DRAM
-
-
+void handleRoot() {
   String LEDvalue;
   int16_t rotate;
   if (server.hasArg("LED")){
@@ -125,32 +175,14 @@ void handleSubmit()
   else if(server.hasArg("rotate"))
   {
     rotate = server.arg("rotate").toInt();
-    if(rotate > 50)
-    {
-      digitalWrite(LED_BUILTIN, 0);
-      server.send(200, "text/html", INDEX_HTML);
-    }
-    else{
-      digitalWrite(LED_BUILTIN,1);
-      server.send(200, "text/html", INDEX_HTML);
-    }
+    digitalWrite(LED_BUILTIN, 0);
+    move(current, rotate);
+    current = rotate;
+    digitalWrite(LED_BUILTIN, 1);
+    server.send(200, "text/html", INDEX_HTML);
   } else {
     server.send(200, "text/html", INDEX_HTML);
   } 
-}
- 
-
-void handleRoot() {
-  handleSubmit();
-  // if (server.hasArg("rotate")) {
-   // handleSubmit();
-  //}
-  //else if (server.hasArg("LED")) {
-  //  handleSubmit();
- // }
- // else {
- //   server.send(200, "text/html", INDEX_HTML);
- // }
 }
 
 void handleReset(){
@@ -179,14 +211,18 @@ void handleNotFound() {
 }
 
 void setup(void) {
+  //Pin config
   pinMode(LED_BUILTIN, OUTPUT);
+
+
   digitalWrite(LED_BUILTIN, 1);
+  //Serial setup
   Serial.begin(115200);
+
+  //Wifi
   WiFiManager wifiManager;
   wifiManager.autoConnect("FingThing");
-  //WiFi.begin(ssid, password);
   Serial.println("");
-
   // Wait for connection
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
@@ -197,17 +233,39 @@ void setup(void) {
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
   
-  if (MDNS.begin("fingerbox", WiFi.localIP())) {
+  if (MDNS.begin("fingthing", WiFi.localIP())) {
     Serial.println("MDNS responder started");
   }
   WiFi.setSleepMode(WIFI_NONE_SLEEP);
+  
+  //Servo setup
+  servo.attach(D8);
+
+  //bme setup
+  bme.begin(0x76);
+
+  bme.setSampling(Adafruit_BME280::MODE_NORMAL,
+                  Adafruit_BME280::SAMPLING_X1,
+                  Adafruit_BME280::SAMPLING_X1,
+                  Adafruit_BME280::SAMPLING_X1,
+                  Adafruit_BME280::FILTER_X4,
+                  Adafruit_BME280::STANDBY_MS_0_5
+                  );
+
+  //Server setup
   server.on("/", handleRoot);
 
   server.on("/reset", handleReset);
+  server.on("/data", handleTemp);
+  server.on("/data", HTTP_OPTIONS, []() {
+    server.sendHeader("Access-Control-Allow-Origin","*");
+    server.send(204);
+ });
 
   server.onNotFound(handleNotFound);
 
   server.begin();
+
   Serial.println("HTTP server started");
 
   MDNS.addService("http", "tcp", 80);
