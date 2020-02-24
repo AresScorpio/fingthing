@@ -13,10 +13,12 @@ Adafruit_BME280 bme;
 #define SEALEVELPRESSURE_HPA (1016.20)
 
 ESP8266WebServer server(80);
-int16_t current = 0;
+int16_t start = 90;
+int16_t stop = 180;
+int16_t delay_t = 100;
 
 const char INDEX_HTML[] =
-"<!DOCTYPE HTML>\n""<!DOCTYPE HTML>\n"
+"<!DOCTYPE HTML>\n"
 "<html>\n"
 "\n"
 "<head>\n"
@@ -49,7 +51,7 @@ const char INDEX_HTML[] =
 "</head>\n"
 "\n"
 "<body>\n"
-"    \n"
+"\n"
 "    <nav class=\"navbar navbar-expand-lg navbar-light bg-light\">\n"
 "        <a class=\"navbar-brand\" style=\"font-family: 'Comic Sans MS', cursive, sans-serif\" href=\"#\">FingThing - Dev</a>\n"
 "        <button class=\"navbar-toggler\" type=\"button\" data-toggle=\"collapse\" data-target=\"#navbarSupportedContent\"\n"
@@ -77,43 +79,73 @@ const char INDEX_HTML[] =
 "            <div class=\"card mx-auto\" style=\"width: 25rem;\">\n"
 "                <div class=\"card-header\">\n"
 "                    <div class=\"row\">\n"
-"                        <div class=\"col-md-7\">Finger 1</div>\n"
-"                        <div class=\"col-md-5 float-right\"><i id=\"dgc\"></i><i>C </i><i\n"
-"                                id=\"prh\"></i><i>% </i><i id=\"hpa\"></i><i>hPa</i></div>\n"
+"                        <div class=\"col-md-7\">Switch 1</div>\n"
+"                        <div class=\"col-md-5 float-right\"><i id=\"dgc\"></i><i>C </i><i id=\"prh\"></i><i>% </i><i\n"
+"                                id=\"hpa\"></i><i>hPa</i></div>\n"
 "                    </div>\n"
 "                </div>\n"
 "                <div class=\"card-body\">\n"
 "                    <h5 class=\"card-title\">Control Panel</h5>\n"
 "                    <p class=\"card-text\">\n"
-"                        <FORM action=\"/\" method=\"post\">\n"
-"                            <div class=\"form-group\">\n"
-"                                <div class=\"custom-control custom-radio\">\n"
-"                                    <input type=\"radio\" id=\"customRadio1\" name=\"LED\" value=\"1\"\n"
-"                                        class=\"custom-control-input\">\n"
-"                                    <label class=\"custom-control-label\" for=\"customRadio1\">On</label>\n"
-"                                </div>\n"
-"                                <div class=\"custom-control custom-radio\">\n"
-"                                    <input type=\"radio\" id=\"customRadio2\" name=\"LED\" value=\"0\"\n"
-"                                        class=\"custom-control-input\">\n"
-"                                    <label class=\"custom-control-label\" for=\"customRadio2\">Off</label>\n"
-"                                </div>\n"
-"                            </div>\n"
-"                            <div class=\"form-group\">\n"
-"                                <div class=\"form-group row\">\n"
-"                                    <label for=\"example-number-input\" class=\"col-4 col-form-label\">Rotate</label>\n"
-"                                    <div class=\"col-10\">\n"
-"                                        <input class=\"form-control width: 4rem;\" type=\"number\" name=\"rotate\" value=\"42\"\n"
-"                                            id=\"example-number-input\">\n"
+"                        <div class=\"row\">\n"
+"                            <form action=\"/\" method=\"post\">\n"
+"                                <input type=\"hidden\" name=\"switch\">\n"
+"                                <button type=\"submit\" class=\"btn btn-primary\">Give it a finger</button>\n"
+"                            </form>\n"
+"                        </div>\n"
+"                        <p></p>\n"
+"                        <div class=\"row\">\n"
+"                            <p>\n"
+"                                <button class=\"btn btn-primary\" type=\"button\" data-toggle=\"collapse\"\n"
+"                                    data-target=\"#collapseExample\" aria-expanded=\"false\"\n"
+"                                    aria-controls=\"collapseExample\">\n"
+"                                    Settings\n"
+"                                </button>\n"
+"                            </p>\n"
+"                            <div class=\"collapse\" id=\"collapseExample\">\n"
+"                                <FORM action=\"/\" method=\"post\">\n"
+"                                    <div class=\"form-group\">\n"
+"                                        <div class=\"custom-control custom-radio\">\n"
+"                                            <input type=\"radio\" id=\"customRadio1\" name=\"LED\" value=\"1\"\n"
+"                                                class=\"custom-control-input\">\n"
+"                                            <label class=\"custom-control-label\" for=\"customRadio1\">On</label>\n"
+"                                        </div>\n"
+"                                        <div class=\"custom-control custom-radio\">\n"
+"                                            <input type=\"radio\" id=\"customRadio2\" name=\"LED\" value=\"0\"\n"
+"                                                class=\"custom-control-input\">\n"
+"                                            <label class=\"custom-control-label\" for=\"customRadio2\">Off</label>\n"
+"                                        </div>\n"
 "                                    </div>\n"
-"                                </div>\n"
-"                            </div><button type=\"submit\" class=\"btn btn-primary\">Submit</button>\n"
-"                            <button type=\"reset\" class=\"btn btn-primary\">Reset</button>\n"
-"                        </FORM>\n"
+"                                    <div class=\"form-group\">\n"
+"                                        <div class=\"form-group row\">\n"
+"                                            <label for=\"example-number-input\" class=\"col-4 col-form-label\">Start</label>\n"
+"                                            <div class=\"col-10\">\n"
+"                                                <input class=\"form-control width: 4rem;\" type=\"number\" name=\"start\"\n"
+"                                                    value=\"90\" id=\"example-number-input\">\n"
+"                                            </div>\n"
+"                                            <label for=\"example-number-input1\" class=\"col-4 col-form-label\">Stop</label>\n"
+"                                            <div class=\"col-10\">\n"
+"                                                <input class=\"form-control width: 4rem;\" type=\"number\" name=\"stop\"\n"
+"                                                    value=\"180\" id=\"example-number-input1\">\n"
+"                                            </div>\n"
+"                                            <label for=\"example-number-input2\"\n"
+"                                                class=\"col-4 col-form-label\">Delay</label>\n"
+"                                            <div class=\"col-10\">\n"
+"                                                <input class=\"form-control width: 4rem;\" type=\"number\" name=\"delay\"\n"
+"                                                    value=\"100\" id=\"example-number-input2\">\n"
+"                                            </div>\n"
+"                                        </div>\n"
+"                                    </div><button type=\"submit\" class=\"btn btn-primary\">Submit</button>\n"
+"                                    <button type=\"reset\" class=\"btn btn-primary\">Reset</button>\n"
+"                                </FORM>\n"
+"                            </div>\n"
+"                        </div>\n"
 "                </div>\n"
 "            </div>\n"
 "        </div>\n"
 "    </div>\n"
 "</body>\n"
+"\n"
 "</html>";
 
 void returnFail(String msg)
@@ -157,7 +189,6 @@ void handleTemp()
 
 void handleRoot() {
   String LEDvalue;
-  int16_t rotate;
   if (server.hasArg("LED")){
     LEDvalue = server.arg("LED");
     if (LEDvalue == "1") {
@@ -172,13 +203,22 @@ void handleRoot() {
       server.send(200, "text/html", INDEX_HTML);
     }
   } 
-  else if(server.hasArg("rotate"))
+  else if(server.hasArg("switch"))
   {
-    rotate = server.arg("rotate").toInt();
+    move(start,stop);
+    delay(delay_t);
+    move(stop,start);
+    server.send(200, "text/html", INDEX_HTML);
+  }
+  else if(server.hasArg("start"))
+  {
+    start = server.arg("start").toInt();
+    stop = server.arg("stop").toInt();
+    delay_t = server.arg("delay").toInt();
     digitalWrite(LED_BUILTIN, 0);
-    move(current, rotate);
-    current = rotate;
-    digitalWrite(LED_BUILTIN, 1);
+    move(start, stop);
+    delay(delay_t);
+    move(stop,start);
     server.send(200, "text/html", INDEX_HTML);
   } else {
     server.send(200, "text/html", INDEX_HTML);
